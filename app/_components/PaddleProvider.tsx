@@ -3,16 +3,29 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "./AuthProvider";
 
+// Use a simple type alias to avoid conflict with @paddle/paddle-js types
+type PaddleType = {
+  Environment: {
+    set: (env: string) => void;
+  };
+  Initialize: (options: {
+    token: string;
+    eventCallback: (event: Record<string, unknown>) => void;
+  }) => void;
+  Checkout?: {
+    open: (options: Record<string, unknown>) => void;
+    close: () => void;
+  };
+};
+
 declare global {
   interface Window {
-    Paddle?: typeof import("@paddle/paddle-js");
-    PaddleCheckout?: any;
+    Paddle?: PaddleType;
   }
 }
 
 export function PaddleProvider({ children }: { children: React.ReactNode }) {
   const [initialized, setInitialized] = useState(false);
-  const { user } = useAuth();
 
   useEffect(() => {
     const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;

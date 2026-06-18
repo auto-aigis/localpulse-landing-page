@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,7 +61,7 @@ export default function DashboardPage() {
     }
   };
 
-  const verifyTransaction = async (txnId: string) => {
+const verifyTransaction = useCallback(async (txnId: string) => {
     try {
       await paymentsApi.verifyTransaction(txnId);
       await refresh();
@@ -73,8 +73,19 @@ export default function DashboardPage() {
     } catch (err) {
       console.error("Transaction verification failed:", err);
     }
-  };
+  }, [refresh]);
 
+  useEffect(() => {
+    setLoading(true);
+    loadDigest();
+  }, []);
+
+  useEffect(() => {
+    if (checkoutSuccess && transactionId) {
+      setProcessing(true);
+      verifyTransaction(transactionId).finally(() => setProcessing(false));
+    }
+  }, [checkoutSuccess, transactionId, verifyTransaction]);
   useEffect(() => {
     setLoading(true);
     loadDigest();
